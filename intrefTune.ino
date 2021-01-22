@@ -16,6 +16,8 @@
 // - First working version
 // - covers only ATmega1280 and ATmega2560, ATmegaX4, ATmegaX8, ATtinyX4, ATtinyX5, ATtinyX61,
 //   ATtinyX7, ATtiny1634
+// Version 1.1 (21.1.2021)
+// - corrected some typos
 
 #define VERSION "1.0"
 #define STORE_TO_EEPROM
@@ -110,8 +112,8 @@ int getBandgap(void)
   
 #if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) 
   ADMUX =  _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
-#elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) \\
-  defined(__AVR_ATmega644P__) || defined(__AVR_ATmega324__) || defined(__AVR_ATmega324P__)
+#elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) \
+  || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega324__) || defined(__AVR_ATmega324P__)
   ADMUX = _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
 #elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328__) || defined (__AVR_ATmega168__) \
   || defined (__AVR_ATmega168P__) || defined (__AVR_ATmega88__)
