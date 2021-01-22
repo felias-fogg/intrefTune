@@ -19,7 +19,7 @@
 // Version 1.1 (21.1.2021)
 // - corrected some typos
 
-#define VERSION "1.0"
+#define VERSION "1.1"
 #define STORE_TO_EEPROM
 #define STORE_AT_END
 #define STORE_OFFSET 0 // reserved for INTREF (either first two or last two bytes!)
