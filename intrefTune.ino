@@ -12,16 +12,17 @@
 // Retrieve the value in your final sketch from EEPROM and use the bandgap routine, as we used it in
 // this sketch.
 
-// Version 1.0 (20.1.2021)
+// Version 1.0.0 (20.1.2021)
 // - First working version
 // - covers only ATmega1280 and ATmega2560, ATmegaX4, ATmegaX8, ATtinyX4, ATtinyX5, ATtinyX61,
 //   ATtinyX7, ATtiny1634
-// Version 1.1 (21.1.2021)
+// Version 1.0.1 (21.1.2021)
 // - corrected some typos
+// Version 1.0.2 (26.1.2021)
+// - use now new Vcc library
 
-#define VERSION "1.1"
+#define VERSION "1.0.2"
 #define STORE_TO_EEPROM
-#define STORE_AT_END
 #define STORE_OFFSET 0 // reserved for INTREF (either first two or last two bytes!)
 #define BAUDRATE 2400
 #define WAITTIMEMS (30UL*1000UL)
@@ -30,9 +31,10 @@
 
 
 #include <EEPROM.h>
+#include <Vcc.h>
 #include <TXOnlySerial.h>
 
-#ifdef STORE_AT_END
+#ifdef INTREF_AT_END_OF_EEPROM
 #define EE_ADDR (E2END-STORE_OFFSET-1)
 #else
 #define EE_ADDR STORE_OFFSET
@@ -46,10 +48,10 @@ unsigned int voltage = 0, lastvoltage = 0;
 
 void setup()
 {
-  #ifdef STORE_TO_EEPROM
+#ifdef STORE_TO_EEPROM
   EEPROM.get(EE_ADDR,intref);
 #else
-  byte intref = 0xFFFF;
+  intref = 0xFFFF;
 #endif
   mySerial.begin(BAUDRATE);
   mySerial.println(F("\r\n\nintrefTune V" VERSION "\n"));
@@ -88,7 +90,7 @@ void loop(void)
     lastpress = millis();
     pressed = true;
   }
-  voltage = getBandgap();
+  voltage = Vcc::measure(1000, intref);
   if (intref != lastintref || abs(lastvoltage-voltage) > 5) {
     mySerial.print(F("INTREF="));
     mySerial.print(intref);
@@ -103,43 +105,5 @@ void loop(void)
     lastvoltage = voltage;
   }
   while (millis() - start < REPEATTIMEMS && pressed ) delay(1);
-}
-
-int getBandgap(void)
-{
-  int reading;
-  long acc;
-  
-#if defined(__AVR_ATmega1280__) || defined(__AVR_ATmega2560__) 
-  ADMUX =  _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
-#elif defined(__AVR_ATmega1284__) || defined(__AVR_ATmega1284P__) || defined(__AVR_ATmega644__) \
-  || defined(__AVR_ATmega644P__) || defined(__AVR_ATmega324__) || defined(__AVR_ATmega324P__)
-  ADMUX = _BV(REFS0) | _BV(MUX4) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
-#elif defined(__AVR_ATmega328P__) || defined(__AVR_ATmega328__) || defined (__AVR_ATmega168__) \
-  || defined (__AVR_ATmega168P__) || defined (__AVR_ATmega88__)
-  ADMUX = _BV(REFS0) | _BV(MUX3) | _BV(MUX2) | _BV(MUX1);
-#elif  defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny24A__) || defined(__AVR_ATtiny44__) \
-  || defined(__AVR_ATtiny44A__) || defined(__AVR_ATtiny84__) || defined(__AVR_ATtiny84A__) 
-  ADMUX = _BV(MUX5) | _BV(MUX0);
-#elif defined(__AVR_ATtiny25__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtiny85__)
-  ADMUX = _BV(MUX3) | _BV(MUX2);
-#elif defined(__AVR_ATtiny261__) || defined(__AVR_ATtiny261A__) || defined(__AVR_ATtiny461__) \
-  || defined(__AVR_ATtiny461A__) || defined(__AVR_ATtiny861__) || defined(__AVR_ATtiny861A__)
-  ADMUX = _BV(MUX1) | _BV(MUX2) | _BV(MUX3) | _BV(MUX4);
-#elif defined(__AVR_ATtiny167__) || defined(__AVR_ATtiny87__)
-  ADMUX = _BV(MUX3) | _BV(MUX2);
-#elif defined(__AVR_ATtiny1634__)
-  ADMUX = _BV(MUX3) | _BV(MUX2) | _BV(MUX0) ;
-#else
-  #error "Unsupported MCU"
-#endif
-  acc = 0;
-  for (byte i = 0; i < 100; i++) { 
-    ADCSRA |= _BV(ADSC); // Convert
-    while (bit_is_set(ADCSRA,ADSC));
-    reading = ADC;
-    acc += ((intref * 1023L) / reading);
-  }
-  return acc/100;
 }
 
