@@ -9,6 +9,8 @@
 // 6) When satisfied, wait 30 seconds. The INTREF value will then be
 //    stored in EEPROM (if STORE_TO_EEPROM is defined), either at the beginning or at the end,
 //    depending on whether the compile time switch STORE_AT_END is defined.
+// 7) If you want to 'erase' the calibration value, then press both buttons and
+//    provoke a reset.
 // Retrieve the value in your final sketch from EEPROM and use the bandgap routine, as we used it in
 // this sketch.
 
@@ -20,11 +22,16 @@
 // - corrected some typos
 // Version 1.0.2 (26.1.2021)
 // - use now new Vcc library
+// Version 1.0.3 (28.1.2021)
+// - added possibility to erase the calibration value
+// Version 1.0.4 (03.02.2021)
+// - print out EEPROM addr where value is stored
+// - changed baud rate to 9600
 
-#define VERSION "1.0.2"
+#define VERSION "1.0.3"
 #define STORE_TO_EEPROM
 #define STORE_OFFSET 0 // reserved for INTREF (either first two or last two bytes!)
-#define BAUDRATE 2400
+#define BAUDRATE 9600
 #define WAITTIMEMS (30UL*1000UL)
 #define REPEATTIMEMS 300
 #define DEFAULT_INTREF 1100
@@ -58,6 +65,14 @@ void setup()
   if (intref == 0xFFFF) intref = DEFAULT_INTREF;
   mySerial.print(F("Initial INTREF value: "));
   mySerial.println(intref);
+#ifdef STORE_TO_EEPROM
+  if (digitalRead(MOSI) == LOW && digitalRead(SCK) == LOW) {
+    mySerial.print(F("Erasing stored INTREF value in EEPROM at 0x"));
+    mySerial.println(EE_ADDR, HEX);
+    EEPROM.put(EE_ADDR,0xFFFF);
+    while (1);
+  }
+#endif
   pinMode(MOSI, INPUT_PULLUP); // note: this is the MISO-ISP pin!
   pinMode(SCK, INPUT_PULLUP);
 }
