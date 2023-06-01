@@ -27,11 +27,13 @@
 // Version 1.0.4 (03.02.2021)
 // - print out EEPROM addr where value is stored
 // - changed baud rate to 9600
+// Version 1.0.5 (1.6.2023)
+// - default baud rate is now 1200
 
-#define VERSION "1.0.3"
+#define VERSION "1.0.5"
 #define STORE_TO_EEPROM
 #define STORE_OFFSET 0 // reserved for INTREF (either first two or last two bytes!)
-#define BAUDRATE 9600
+#define BAUDRATE 1200
 #define WAITTIMEMS (30UL*1000UL)
 #define REPEATTIMEMS 300
 #define DEFAULT_INTREF 1100
