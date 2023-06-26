@@ -7,4 +7,4 @@ Connect a voltage meter to Vcc and GND and read the comments in the top of the s
 
 The main point is  that you can use the value stored in EEPROM later in your particular application sketch. One important prerequisite for this is, however, that you burn the EESAVE fuse! Otherwise the values stored into EEPROM will always be deleted when a new sketch is uploaded to flash memory. Alternatively, you can disable storage  in EEPROM and just take the best value that is displayed as a compile time constant -- provided you have only one instance to deploy. 
 
-Nate that by now, there is a much easier way to calibrate you AVR MCU: [avrCalibrate](https://github.com/felias-fogg/avrCalibrate)
+Note that by now, there is a much easier way to calibrate you AVR MCU: [avrCalibrate](https://github.com/felias-fogg/avrCalibrate)
