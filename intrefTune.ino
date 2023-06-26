@@ -3,12 +3,11 @@
 // 1) Burn the fuses for EEPROM preservation 
 // 2) Connect the Vcc and GND to a Voltage meter
 // 3) Connect MISO and (ICSP pin 1) and SCK (ICSP pin 3) with buttons switching to GND
-// 4) Connect MOSI (ICSP pin  4, opposite to SCK) to RX on a FTDI adapter, 2400 baud
+// 4) Connect MOSI (ICSP pin  4, opposite to SCK) to RX on a FTDI adapter, 1200 baud
 // 5) Press one of the buttons to change the INTREF value and compare reported voltage with meter,
 //    the INTREF value changes every 0.3 seconds when the button is continously pressed
 // 6) When satisfied, wait 30 seconds. The INTREF value will then be
-//    stored in EEPROM (if STORE_TO_EEPROM is defined), either at the beginning or at the end,
-//    depending on whether the compile time switch STORE_AT_END is defined.
+//    stored in EEPROM (if STORE_TO_EEPROM is defined), at the end of the EEPROM (at E2END-3 and E2END-2) 
 // 7) If you want to 'erase' the calibration value, then press both buttons and
 //    provoke a reset.
 // Retrieve the value in your final sketch from EEPROM and use the bandgap routine, as we used it in
@@ -29,10 +28,13 @@
 // - changed baud rate to 9600
 // Version 1.0.5 (1.6.2023)
 // - default baud rate is now 1200
+// Version 2.0.0 (26.06.2023)
+// - value is now always stored at E2END-3 and E2END-2 (in order to be compatible with new Vcc version)
+// - the TX pin is now always the pin labeled MOSI
 
-#define VERSION "1.0.5"
+
+#define VERSION "2.0.0"
 #define STORE_TO_EEPROM
-#define STORE_OFFSET 0 // reserved for INTREF (either first two or last two bytes!)
 #define BAUDRATE 1200
 #define WAITTIMEMS (30UL*1000UL)
 #define REPEATTIMEMS 300
@@ -43,14 +45,17 @@
 #include <Vcc.h>
 #include <TXOnlySerial.h>
 
-#ifdef INTREF_AT_END_OF_EEPROM
-#define EE_ADDR (E2END-STORE_OFFSET-1)
+#define EE_ADDR (E2END-3)
+
+#ifdef SPIE // if chip has an SPI module
+#define TXPIN MOSI
+#define UPPIN MISO
 #else
-#define EE_ADDR STORE_OFFSET
+#define TXPIN MISO // pin labeled MOSI
+#define UPPIN MOSI // pin labeled MISO 
 #endif
-
-
-TXOnlySerial mySerial(MISO); // note: this is the MOSI-ISP pin!
+#define DWPIN SCK
+TXOnlySerial mySerial(TXPIN); // note: this always the pin labeled MOSI
 unsigned long lastpress = millis();
 unsigned int lastintref = 0, intref;
 unsigned int voltage = 0, lastvoltage = 0;
@@ -75,8 +80,8 @@ void setup()
     while (1);
   }
 #endif
-  pinMode(MOSI, INPUT_PULLUP); // note: this is the MISO-ISP pin!
-  pinMode(SCK, INPUT_PULLUP);
+  pinMode(UPPIN, INPUT_PULLUP); // note: this is the MISO-ISP pin!
+  pinMode(DWPIN, INPUT_PULLUP);
 }
 
 
@@ -98,11 +103,11 @@ void loop(void)
     }
   }
 #endif
-  if (digitalRead(MOSI) == LOW) { // note: this is the MISO-ISP pin
+  if (digitalRead(UPPIN) == LOW) { // note: this is the MISO-ISP pin
     intref++;
     lastpress = millis();
     pressed = true;
-  } else if (digitalRead(SCK) == LOW) {
+  } else if (digitalRead(DWPIN) == LOW) {
     intref--;
     lastpress = millis();
     pressed = true;
